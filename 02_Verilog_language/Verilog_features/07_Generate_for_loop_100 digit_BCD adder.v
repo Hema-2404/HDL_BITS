@@ -1,20 +1,34 @@
 module top_module( 
-    input [99:0] a, b,
+    input [399:0] a, b,
     input cin,
-    output [99:0] cout,
-    output [99:0] sum 
+    output cout,
+    output [399:0] sum 
     );
   
-  genvar i;
-  
-  assign sum[0] = a[0]^b[0]^cin;
-  assign cout[0]=a[0]&b[0] | a[0]&cin | b[0]&cin;
-  
-  generate
-      for(i=1; i<100 ; i=i+1)begin:FA
-          assign sum[i] = a[i]^b[i]^cout[i-1];
-          assign cout[i] = a[i]&b[i] | a[i]&cout[i-1] | b[i]&cout[i-1];
-      end
-  endgenerate
+  wire [99:0] cout_temp;
 
+	bcd_fadd u_bcd_fadd(
+		.a(a[3:0]),
+		.b(b[3:0]),
+		.cin(cin),
+		.cout(cout_temp[0]),
+		.sum(sum[3:0])
+	);
+	
+  generate
+		genvar i;
+		for(i=1; i<100; i=i+1)
+		begin : block1
+			bcd_fadd u_bcd_fadd(
+				.a(a[4*i+3 : 4*i]),
+				.b(b[4*i+3 : 4*i]),
+				.cin(cout_temp[i-1]),
+				.cout(cout_temp[i]),
+				.sum(sum[4*i+3 : 4*i])
+			);
+		end
+	endgenerate
+	
+  assign cout = cout_temp[99]; 
+    
 endmodule
